@@ -1,5 +1,6 @@
 const express = require('express');
 const Article = require('../models/Article');
+const Category = require('../models/Category');
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 
@@ -38,11 +39,18 @@ router.get('/', async (req, res) => {
     const filter = { status: 'published' };
 
     if (req.query.category) {
-      // Look up category by slug to get its _id
-      const Category = require('../models/Category');
+      // Look up category by slug
       const cat = await Category.findOne({ slug: req.query.category });
       if (!cat) return res.status(200).json({ articles: [], total: 0, page, limit });
-      filter.category = cat._id;
+
+      // Check if this category has sub-categories (is a parent category)
+      const subCategories = await Category.find({ parentCategory: cat._id });
+      if (subCategories.length > 0) {
+        const categoryIds = [cat._id, ...subCategories.map((s) => s._id)];
+        filter.category = { $in: categoryIds };
+      } else {
+        filter.category = cat._id;
+      }
     }
 
     if (req.query.search) {
@@ -158,6 +166,37 @@ router.put('/:id/reject', auth, role('admin'), async (req, res) => {
       { new: true }
     );
     if (!article) return res.status(404).json({ message: 'Article not found' });
+    res.status(200).json(article);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// PUT /api/articles/:id/submit — owner or admin, moves draft -> pending
+router.put('/:id/submit', auth, async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ message: 'Article not found' });
+
+    const isAdmin = req.user.role === 'admin';
+    const isOwner = article.submittedBy.toString() === req.user.userId;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({
+        message: 'You can only submit your own articles',
+      });
+    }
+
+    if (article.status !== 'draft') {
+      return res.status(400).json({
+        message: 'Only draft articles can be submitted',
+      });
+    }
+
+    article.status = 'pending';
+    article.updatedAt = new Date();
+    await article.save();
+
     res.status(200).json(article);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

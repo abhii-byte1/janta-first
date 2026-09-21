@@ -10,6 +10,11 @@ const categorySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  parentCategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

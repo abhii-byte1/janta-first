@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { getToken, isAdmin, logout } from '../../lib/auth';
-import { authGet, authPut } from '../../lib/api';
+import { authGet, authPut, authPost } from '../../lib/api';
 
 export default function AdminPending() {
   const router = useRouter();
@@ -18,13 +19,21 @@ export default function AdminPending() {
 
   // ── State ──────────────────────────────────────────────────────────
   const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
   const [actionLoading, setActionLoading] = useState(null); // article _id being actioned
 
+  // ── Import state ───────────────────────────────────────────────────
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [importError, setImportError] = useState('');
+
   // ── Fetch pending articles ─────────────────────────────────────────
   const fetchPending = async () => {
+    setLoading(true);
     setFetchError('');
     const { data, ok } = await authGet('/api/articles/pending');
+    setLoading(false);
     if (!ok) {
       setFetchError(data?.message || 'Failed to load pending articles');
       return;
@@ -49,6 +58,20 @@ export default function AdminPending() {
     setArticles((prev) => prev.filter((a) => a._id !== id));
   };
 
+  // ── Import 10 Latest News from NewsData.io ─────────────────────────
+  const handleImportNews = async () => {
+    setImporting(true);
+    setImportResult(null);
+    setImportError('');
+    const { data, ok } = await authPost('/api/import/newsdata', {});
+    setImporting(false);
+    if (!ok) {
+      setImportError(data?.message || 'Failed to import news from NewsData.io');
+      return;
+    }
+    setImportResult(data);
+  };
+
   const handleLogout = () => {
     logout();
     router.replace('/admin/login');
@@ -62,21 +85,69 @@ export default function AdminPending() {
         {/* Header */}
         <header style={s.header}>
           <div style={s.breadcrumb}>
-            <a href="/admin" style={s.backLink}>← Dashboard</a>
+            <Link href="/admin" style={s.backLink}>← Dashboard</Link>
             <h1 style={s.heading}>Pending Articles</h1>
           </div>
           <button onClick={handleLogout} style={s.logoutBtn}>Logout</button>
         </header>
 
+        {/* Import News Section */}
+        <section style={s.importCard}>
+          <div style={s.importTop}>
+            <div>
+              <h2 style={s.importTitle}>NewsData.io Auto-Import</h2>
+              <p style={s.importDesc}>
+                Pull latest Hindi news from NewsData.io API directly into your database.
+              </p>
+            </div>
+            <button
+              onClick={handleImportNews}
+              disabled={importing}
+              style={importing ? { ...s.btnImport, ...s.btnImportDisabled } : s.btnImport}
+            >
+              {importing ? '⏳ Importing News…' : '📥 Import 10 Latest News'}
+            </button>
+          </div>
+
+          <p style={s.importNotice}>
+            ℹ️ <strong>Note:</strong> Imported articles are saved with <code>draft</code> status and have no category assigned. Review, categorize, and submit them for publishing in your <Link href="/dashboard" style={s.linkText}>Articles Dashboard</Link>.
+          </p>
+
+          {importResult && (
+            <div style={s.importResultBox}>
+              <p style={s.importSuccessTitle}>
+                ✅ <strong>Import complete!</strong>
+              </p>
+              <ul style={s.importResultList}>
+                <li><strong>{importResult.imported}</strong> new article{importResult.imported === 1 ? '' : 's'} imported as Drafts.</li>
+                <li><strong>{importResult.skipped}</strong> duplicate article{importResult.skipped === 1 ? '' : 's'} skipped.</li>
+                <li><strong>{importResult.total_fetched}</strong> articles fetched in total.</li>
+              </ul>
+            </div>
+          )}
+
+          {importError && (
+            <div style={s.importErrorBox}>
+              ⚠️ <strong>Import Error:</strong> {importError}
+            </div>
+          )}
+        </section>
+
         {fetchError && <p style={s.error}>{fetchError}</p>}
 
-        {!fetchError && articles.length === 0 && (
+        {loading && (
+          <div style={s.emptyCard}>
+            <p style={s.empty}>Loading pending articles…</p>
+          </div>
+        )}
+
+        {!loading && !fetchError && articles.length === 0 && (
           <div style={s.emptyCard}>
             <p style={s.empty}>🎉 No pending articles. All caught up!</p>
           </div>
         )}
 
-        {articles.map((article) => (
+        {!loading && articles.map((article) => (
           <div key={article._id} style={s.articleCard}>
             <div style={s.articleMeta}>
               <h2 style={s.articleTitle}>{article.title}</h2>
@@ -163,4 +234,87 @@ const s = {
   actions: { display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '110px' },
   btnApprove: { padding: '0.5rem 0.9rem', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.875rem' },
   btnReject: { padding: '0.5rem 0.9rem', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.875rem' },
+  importCard: {
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    padding: '1.25rem 1.5rem',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+    marginBottom: '1.5rem',
+    border: '1px solid #e2e8f0',
+  },
+  importTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap',
+    marginBottom: '0.75rem',
+  },
+  importTitle: {
+    margin: 0,
+    fontSize: '1.15rem',
+    color: '#0f172a',
+    fontWeight: '700',
+  },
+  importDesc: {
+    margin: '0.25rem 0 0',
+    fontSize: '0.875rem',
+    color: '#64748b',
+  },
+  btnImport: {
+    padding: '0.6rem 1.2rem',
+    backgroundColor: '#1d4ed8',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    whiteSpace: 'nowrap',
+    transition: 'background-color 0.15s ease',
+  },
+  btnImportDisabled: {
+    backgroundColor: '#94a3b8',
+    cursor: 'not-allowed',
+  },
+  importNotice: {
+    margin: '0.5rem 0 0',
+    fontSize: '0.8rem',
+    color: '#475569',
+    backgroundColor: '#f8fafc',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '4px',
+    border: '1px solid #e2e8f0',
+  },
+  linkText: {
+    color: '#1d4ed8',
+    textDecoration: 'underline',
+  },
+  importResultBox: {
+    marginTop: '1rem',
+    padding: '0.75rem 1rem',
+    backgroundColor: '#f0fdf4',
+    border: '1px solid #bbf7d0',
+    borderRadius: '6px',
+    color: '#166534',
+  },
+  importSuccessTitle: {
+    margin: '0 0 0.4rem',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+  },
+  importResultList: {
+    margin: 0,
+    paddingLeft: '1.25rem',
+    fontSize: '0.85rem',
+  },
+  importErrorBox: {
+    marginTop: '1rem',
+    padding: '0.75rem 1rem',
+    backgroundColor: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: '6px',
+    color: '#991b1b',
+    fontSize: '0.85rem',
+  },
 };

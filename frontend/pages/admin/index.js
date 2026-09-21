@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { getToken, isAdmin, logout } from '../../lib/auth';
 
 export default function AdminDashboard() {
@@ -36,16 +37,31 @@ export default function AdminDashboard() {
           <p style={styles.welcome}>Welcome Admin</p>
           <p style={styles.hint}>Select a section to manage:</p>
           <div style={styles.navGrid}>
-            <a href="/admin/categories" style={styles.navCard}>
+            <Link href="/admin/categories" style={styles.navCard}>
               <span style={styles.navIcon}>🗂️</span>
               <strong>Categories</strong>
               <span style={styles.navDesc}>Add, edit, or delete news categories</span>
-            </a>
-            <a href="/admin/pending" style={styles.navCard}>
+            </Link>
+            <Link href="/admin/pending" style={styles.navCard}>
               <span style={styles.navIcon}>📋</span>
               <strong>Pending Articles</strong>
               <span style={styles.navDesc}>Approve or reject submitted articles</span>
-            </a>
+            </Link>
+            <Link href="/admin/users" style={styles.navCard}>
+              <span style={styles.navIcon}>👥</span>
+              <strong>Users</strong>
+              <span style={styles.navDesc}>Manage user roles and accounts</span>
+            </Link>
+            <Link href="/admin/epaper" style={styles.navCard}>
+              <span style={styles.navIcon}>📰</span>
+              <strong>E-Paper</strong>
+              <span style={styles.navDesc}>Upload and manage daily newspaper PDFs</span>
+            </Link>
+            <Link href="/admin/reporter-applications" style={styles.navCard}>
+              <span style={styles.navIcon}>📨</span>
+              <strong>Applications</strong>
+              <span style={styles.navDesc}>Review reporter joining applications</span>
+            </Link>
           </div>
         </main>
       </div>

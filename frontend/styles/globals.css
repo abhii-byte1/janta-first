@@ -1,25 +1,28 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-primary: #b91c1c;      /* Deep crimson news red */
+  --brand-primary-hover: #991b1b;
+  --brand-secondary: #0f172a;    /* Deep navy slate */
+  --brand-accent: #f59e0b;       /* Saffron/Gold accent */
+  --bg-page: #f8fafc;            /* Crisp clean backdrop */
+  --bg-surface: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --border-light: #e2e8f0;
+  --border-subtle: #f1f5f9;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -35,8 +38,403 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+/* ── Container ────────────────────────────────────────── */
+.site-container {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* ── Responsive Article Grid ─────────────────────────── */
+.article-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 600px) {
+  .article-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
+
+@media (min-width: 960px) {
+  .article-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1120px) {
+  .article-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── 3-column / Related Grid ─────────────────────────── */
+.article-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 600px) {
+  .article-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .article-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Article Card Hover & Polish ─────────────────────── */
+.news-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.news-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 3px 6px rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+}
+
+.news-card .card-thumb-link {
+  display: block;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.news-card .card-thumb {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.news-card:hover .card-thumb {
+  transform: scale(1.03);
+}
+
+.news-card .card-title {
+  color: var(--text-main);
+  transition: color 0.15s ease;
+}
+
+.news-card:hover .card-title {
+  color: var(--brand-primary);
+}
+
+/* ── Article Reading Typography ──────────────────────── */
+.article-content {
+  font-size: 1.125rem;
+  line-height: 1.85;
+  color: #1e293b;
+}
+
+.article-content p {
+  margin-bottom: 1.5rem;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+  color: var(--text-main);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.article-content h2 {
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.35rem;
+}
+
+.article-content h3 {
+  font-size: 1.25rem;
+}
+
+.article-content blockquote {
+  border-left: 4px solid var(--brand-primary);
+  background-color: #fef2f2;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: #7f1d1d;
+  border-radius: 0 6px 6px 0;
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 1.25rem 0 1.5rem 1.5rem;
+  padding-left: 0.5rem;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1.5rem 0;
+}
+
+.article-content a {
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Breaking News Ticker ────────────────────────────── */
+@keyframes tickerScroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: tickerScroll 32s linear infinite;
+  will-change: transform;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.85rem;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.ticker-item-link:hover {
+  color: #fef08a; /* Warm yellow highlight */
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Live Widgets Grid (Cricket & Live TV) ─────────────── */
+.live-widgets-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: stretch;
+}
+
+@media (min-width: 860px) {
+  .live-widgets-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Navigation Category Flyout Dropdown ───────────────── */
+.nav-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  max-width: 360px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  z-index: 100;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .nav-dropdown-container:hover .nav-dropdown-menu {
+    display: block;
+  }
+}
+
+.nav-dropdown-menu.is-open {
+  display: block;
+}
+
+/* ── Card Consistency Across Components ────────────────── */
+.team-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.team-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 3px 6px rgba(0, 0, 0, 0.04);
+  border-color: #cbd5e1;
+}
+
+.archive-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.archive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+  border-color: #cbd5e1;
+}
+
+/* ── Design System Buttons ───────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background-color: var(--brand-primary);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.65rem 1.35rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 3px rgba(185, 28, 28, 0.25);
+  line-height: 1.3;
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background-color: #ffffff;
+  color: #334155 !important;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  line-height: 1.3;
+}
+
+.btn-secondary:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a !important;
+}
+
+/* ── Standard Empty & Error States ────────────────────── */
+.empty-state-box {
+  text-align: center;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 3.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.error-banner-box {
+  padding: 1rem 1.25rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* ── Mobile Form Input Safeguards (Prevent iOS auto-zoom) ─ */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* ── Mobile Polish (~375px) ───────────────────────────── */
+@media (max-width: 640px) {
+  .site-container {
+    padding: 0 0.85rem;
+  }
+
+  .nav-dropdown-menu {
+    position: static;
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.5rem;
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: #991b1b;
+  }
+
+  .nav-dropdown-menu.is-open {
+    display: block;
+  }
+
+  .nav-dropdown-menu .dropdown-item {
+    color: #ffffff !important;
+  }
+}
+

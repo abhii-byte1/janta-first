@@ -1,4 +1,4 @@
-# PROJECT CONTEXT — News Portal (Om Darpan style)
+# PROJECT CONTEXT — News Portal (Janta First)
 
 > AI coding tools: ALWAYS read this file before generating code. Follow the tech stack, folder structure, and schemas below EXACTLY. Do not invent new fields, libraries, or patterns. If something is unclear, ASK — do not assume.
 

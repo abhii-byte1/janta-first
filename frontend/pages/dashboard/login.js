@@ -13,9 +13,15 @@ export default function DashboardLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!email.trim() || !password) {
+      setError('Email and password are required.');
+      return;
+    }
+
     setLoading(true);
 
-    const { data, ok } = await post('/api/auth/login', { email, password });
+    const { data, ok } = await post('/api/auth/login', { email: email.trim(), password });
 
     setLoading(false);
 

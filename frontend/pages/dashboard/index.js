@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getToken, logout } from '../../lib/auth';
-import { authGet } from '../../lib/api';
+import { authGet, authPut } from '../../lib/api';
 
 // Status badge colours
 const STATUS_STYLE = {
@@ -17,7 +17,9 @@ export default function DashboardIndex() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
+  const [submittingId, setSubmittingId] = useState(null);
 
   // ── Auth guard: any logged-in user ─────────────────────────────────
   useEffect(() => {
@@ -29,18 +31,32 @@ export default function DashboardIndex() {
   }, [router]);
 
   // ── Fetch my articles ──────────────────────────────────────────────
+  const fetchArticles = async () => {
+    setLoading(true);
+    const { data, ok } = await authGet('/api/articles/my');
+    setLoading(false);
+    if (!ok) {
+      setFetchError(data?.message || 'Failed to load articles');
+      return;
+    }
+    setArticles(data);
+  };
+
   useEffect(() => {
-    if (!ready) return;
-    const load = async () => {
-      const { data, ok } = await authGet('/api/articles/my');
-      if (!ok) {
-        setFetchError(data?.message || 'Failed to load articles');
-        return;
-      }
-      setArticles(data);
-    };
-    load();
+    if (ready) fetchArticles();
   }, [ready]);
+
+  // ── Submit draft article for review ────────────────────────────────
+  const handleSubmitForReview = async (id) => {
+    setSubmittingId(id);
+    const { ok, data } = await authPut(`/api/articles/${id}/submit`, {});
+    setSubmittingId(null);
+    if (!ok) {
+      alert(data?.message || 'Failed to submit article for review');
+      return;
+    }
+    await fetchArticles();
+  };
 
   const handleLogout = () => {
     logout();
@@ -63,14 +79,20 @@ export default function DashboardIndex() {
 
         {fetchError && <p style={s.error}>{fetchError}</p>}
 
-        {!fetchError && articles.length === 0 && (
+        {loading && (
+          <div style={s.emptyCard}>
+            <p style={s.empty}>Loading your articles…</p>
+          </div>
+        )}
+
+        {!loading && !fetchError && articles.length === 0 && (
           <div style={s.emptyCard}>
             <p style={s.empty}>You haven't submitted any articles yet.</p>
             <a href="/dashboard/new" style={s.btnNew}>Write your first article →</a>
           </div>
         )}
 
-        {articles.length > 0 && (
+        {!loading && articles.length > 0 && (
           <div style={s.card}>
             <h2 style={s.sectionTitle}>Your Articles ({articles.length})</h2>
             <ul style={s.list}>
@@ -95,6 +117,15 @@ export default function DashboardIndex() {
                       </div>
                     </div>
                     <div style={s.actions}>
+                      {article.status === 'draft' && (
+                        <button
+                          onClick={() => handleSubmitForReview(article._id)}
+                          disabled={submittingId === article._id}
+                          style={s.btnSubmitReview}
+                        >
+                          {submittingId === article._id ? 'Submitting…' : 'Submit for Review'}
+                        </button>
+                      )}
                       {canEdit ? (
                         <a href={`/dashboard/edit/${article._id}`} style={s.btnEdit}>
                           Edit
@@ -137,7 +168,8 @@ const s = {
   badge: { borderRadius: '999px', padding: '0.1rem 0.6rem', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.03em' },
   date: { fontSize: '0.8rem', color: '#6b7280' },
   catLabel: { fontSize: '0.8rem', color: '#4b5563', backgroundColor: '#f3f4f6', borderRadius: '4px', padding: '0.1rem 0.4rem' },
-  actions: { display: 'flex', gap: '0.5rem' },
+  actions: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
+  btnSubmitReview: { padding: '0.3rem 0.75rem', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' },
   btnEdit: { padding: '0.3rem 0.75rem', backgroundColor: '#f59e0b', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '600' },
   btnEditDisabled: { padding: '0.3rem 0.75rem', backgroundColor: '#e5e7eb', color: '#9ca3af', borderRadius: '4px', fontSize: '0.85rem', fontWeight: '600', cursor: 'not-allowed' },
 };

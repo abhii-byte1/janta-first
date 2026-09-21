@@ -16,9 +16,21 @@ const slugify = (text) =>
     .replace(/--+/g, '-');        // collapse multiple hyphens
 
 // GET /api/categories — public
+// Supports optional ?parent=<categoryId or "null">
 router.get('/', async (req, res) => {
   try {
-    const categories = await Category.find().sort({ createdAt: -1 });
+    const filter = {};
+    if (req.query.parent !== undefined) {
+      if (req.query.parent === 'null') {
+        filter.parentCategory = null;
+      } else {
+        filter.parentCategory = req.query.parent;
+      }
+    }
+
+    const categories = await Category.find(filter)
+      .sort({ createdAt: 1 })
+      .populate('parentCategory', 'name slug');
     res.status(200).json(categories);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -28,7 +40,7 @@ router.get('/', async (req, res) => {
 // POST /api/categories — admin only
 router.post('/', auth, role('admin'), async (req, res) => {
   try {
-    const { name, slug } = req.body;
+    const { name, slug, parentCategory } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: 'name is required' });
@@ -41,8 +53,16 @@ router.post('/', auth, role('admin'), async (req, res) => {
       return res.status(400).json({ message: 'A category with this slug already exists' });
     }
 
-    const category = new Category({ name, slug: generatedSlug });
+    const categoryData = { name, slug: generatedSlug };
+    if (parentCategory && parentCategory !== 'null') {
+      categoryData.parentCategory = parentCategory;
+    } else {
+      categoryData.parentCategory = null;
+    }
+
+    const category = new Category(categoryData);
     await category.save();
+    await category.populate('parentCategory', 'name slug');
 
     res.status(201).json(category);
   } catch (error) {
@@ -53,18 +73,22 @@ router.post('/', auth, role('admin'), async (req, res) => {
 // PUT /api/categories/:id — admin only
 router.put('/:id', auth, role('admin'), async (req, res) => {
   try {
-    const { name, slug } = req.body;
+    const { name, slug, parentCategory } = req.body;
 
     const updateData = {};
     if (name) updateData.name = name;
     if (slug) updateData.slug = slugify(slug);
     else if (name) updateData.slug = slugify(name);
 
+    if (parentCategory !== undefined) {
+      updateData.parentCategory = (parentCategory && parentCategory !== 'null') ? parentCategory : null;
+    }
+
     const category = await Category.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
-    );
+    ).populate('parentCategory', 'name slug');
 
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
